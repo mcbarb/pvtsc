@@ -1,2 +1,0 @@
-# pvtsc
-"private" sc
