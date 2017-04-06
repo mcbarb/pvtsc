@@ -77,6 +77,15 @@ class FunSetSuite extends FunSuite {
     val s1 = singletonSet(1)
     val s2 = singletonSet(2)
     val s3 = singletonSet(3)
+    val s4 = singletonSet(4)
+    val s1001 = singletonSet(1001)
+    val s = union(union(union(s1, s2), union(s3, s1001)),s4) //  {1,2,3,1001,4}
+    val positivesAndZero : Set = _ >= 0
+    val positives : Set = _ > 0
+    val negatives : Set = _ < 0
+    val integers : Set = _ => true
+    val integersExcludingZero : Set = _ != 0
+
   }
 
   /**
@@ -103,10 +112,42 @@ class FunSetSuite extends FunSuite {
 
   test("union contains all elements of each set") {
     new TestSets {
-      val s = union(s1, s2)
-      assert(contains(s, 1), "Union 1")
-      assert(contains(s, 2), "Union 2")
-      assert(!contains(s, 3), "Union 3")
+      assert(contains(s, 1), "s does contain 1")
+      assert(contains(s, 2), "s does contain 2")
+      assert(!contains(s, 7), "s does not contain 7")
+    }
+  }
+
+  test("intersect contains only elements contained in both sets") {
+    new TestSets {
+      assert(!contains(intersect(s1,s2), 3), "Intersetc{1,2} == {} does not contain 3")
+      assert(contains(intersect(s1,s1), 1), "Intersect{1,1} == {1} does contain 1")
+    }
+  }
+
+  test("forall works") {
+    new TestSets {
+      assert(forall(positives, positivesAndZero), "Positives and Zero contains positives")
+      assert(forall(positives, integersExcludingZero), "Positives and Zero contains positives")
+      assert(!forall(positivesAndZero, integersExcludingZero), "positives And Zero not contained in Integers Excluding Zero")
+    }
+  }
+
+  test("exists works") {
+    new TestSets {
+      assert(exists(s, (_ < 4)),"any value smaller than 4 exists in s")
+      assert(!exists(s, (_ > 999)),"any value greater than 999 does not exists in s because s is bounded")
+      assert(!exists(s, (_ < 0)),"any value smaller than 0 does not exist in s")
+    }
+  }
+
+  test("map works") {
+    new TestSets {
+      val mapped = map(s, (_ * 2))
+      assert( contains(mapped, 2), "map 2" )
+      assert( contains(mapped, 4), "map 4" )
+      assert( contains(mapped, 6), "map 6" )
+      assert( !contains(mapped, 3), "map: 3 is not contained" )
     }
   }
 
