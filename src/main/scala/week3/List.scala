@@ -18,3 +18,9 @@ class Nil[T] extends List[T] {
   def head : Nothing = throw new NoSuchFieldException("Nil.head")
   def tail : Nothing = throw new NoSuchFieldException("Nil.tail")
 }
+
+object List {
+  // List(1,2)
+  def apply[T](a: T, b: T) : List[T] = new Cons(a,new Cons(b,new Nil))
+  def apply() = new Nil
+}
