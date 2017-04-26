@@ -174,7 +174,7 @@ object Huffman {
   /**
    * Write a function that returns the decoded secret
    */
-    def decodedSecret: List[Char] = ???
+    def decodedSecret: List[Char] = decode(frenchCode,secret)
   
 
   // Part 4a: Encoding using Huffman tree
@@ -183,26 +183,22 @@ object Huffman {
    * This function encodes `text` using the code tree `tree`
    * into a sequence of bits.
    */
-
-  def mapChar(acc: List[Bit], pTree: CodeTree)(targetChar: Char) : List[Bit] = pTree match {
-    case Leaf(c,_) => if (c == targetChar) acc else List()
-//    case Fork(l,r,cs,_) => if (cs.contains(targetChar)) mapChar(mapChar(acc :+ 0, l)(targetChar) :+ 1,r)(targetChar) else List()
-    case Fork(l,r,cs,_) => mapChar(acc :+ 1,r)(targetChar) ++ mapChar(acc :+ 0, l)(targetChar)
+  def encode(tree: CodeTree)(text: List[Char]): List[Bit] = {
+    def mapChar(acc: List[Bit], pTree: CodeTree)(targetChar: Char) : List[Bit] = pTree match {
+      case Leaf(c,_) => if (c == targetChar) acc else List()
+      case Fork(l,r,cs,_) => if (cs.contains(targetChar)) mapChar(acc :+ 0,l)(targetChar) ++ mapChar(acc :+ 1, r)(targetChar) else List()
+    }
+    text.flatMap(mapChar(List(),tree))
   }
-
-  def mapCharFinal(tree: CodeTree)(targetChar: Char) : List[Bit] = mapChar(List(),tree)(targetChar: Char) : List[Bit]
-
-  def encode(tree: CodeTree)(text: List[Char]): List[Bit] = text.map(mapCharFinal(tree)).flatten
   
   // Part 4b: Encoding using code table
-
   type CodeTable = List[(Char, List[Bit])]
 
   /**
    * This function returns the bit sequence that represents the character `char` in
    * the code table `table`.
    */
-    def codeBits(table: CodeTable)(char: Char): List[Bit] = ???
+    def codeBits(table: CodeTable)(char: Char): List[Bit] = table.toMap.get(char).get
   
   /**
    * Given a code tree, create a code table which contains, for every character in the
@@ -212,23 +208,33 @@ object Huffman {
    * a valid code tree that can be represented as a code table. Using the code tables of the
    * sub-trees, think of how to build the code table for the entire tree.
    */
-    def convert(tree: CodeTree): CodeTable = ???
-  
-  /**
-   * This function takes two code tables and merges them into one. Depending on how you
-   * use it in the `convert` method above, this merge method might also do some transformations
-   * on the two parameter code tables.
-   */
-    def mergeCodeTables(a: CodeTable, b: CodeTable): CodeTable = ???
-  
-  /**
-   * This function encodes `text` according to the code tree `tree`.
-   *
-   * To speed up the encoding process, it first converts the code tree to a code table
-   * and then uses it to perform the actual encoding.
-   */
-    def quickEncode(tree: CodeTree)(text: List[Char]): List[Bit] = ???
-  }
+    def convert(tree: CodeTree): CodeTable = {
+      def add(acc: CodeTable, chars: List[Char], bit: Bit): CodeTable = chars.map(c => (c, codeBits(acc)(c) :+ bit))
+      def convert0(acc: List[Bit], pTree: CodeTree): CodeTable = pTree match {
+          case Leaf(c, _) => List((c, acc))
+          case Fork(l, r, cs, _) => convert0(acc :+ 0, l) ++ convert0(acc :+ 1, r)
+        }
+      convert0(List[Bit](),tree)
+    }
+
+        /**
+          * This function takes two code tables and merges them into one. Depending on how you
+          * use it in the `convert` method above, this merge method might also do some transformations
+          * on the two parameter code tables.
+          */
+      def mergeCodeTables(a: CodeTable, b: CodeTable): CodeTable = a ++ b
+
+        /**
+          * This function encodes `text` according to the code tree `tree`.
+          *
+          * To speed up the encoding process, it first converts the code tree to a code table
+          * and then uses it to perform the actual encoding.
+          */
+      def quickEncode(tree: CodeTree)(text: List[Char]): List[Bit] = {
+        val ct = convert(tree)
+        text.flatMap(codeBits(ct))
+      }
+    }
 
 object teste extends App {
   val teste = createCodeTree(string2Chars("marcelo eh fodão"))
@@ -237,14 +243,18 @@ object teste extends App {
 //  val singleLetter = createCodeTree("marcelo".toList)
 //  println(singleLetter)
 
-  val teste2 = decode(frenchCode,secret)
-  println(teste2)
-
-  println(mapCharFinal(frenchCode)('a'))
+  println(decodedSecret)
 
   val marceloEncoded = encode(frenchCode)("marcelo".toList)
   println("marcelo")
   println(marceloEncoded)
   println(decode(frenchCode,marceloEncoded))
+
+  val frenchCodeTable = convert(frenchCode)
+  println(frenchCodeTable)
+  val marceloQuickEncoded = quickEncode(frenchCode)("aqzoooogb".toList)
+  println(decode(frenchCode,marceloQuickEncoded))
+
+
 
 }
