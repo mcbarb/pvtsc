@@ -61,7 +61,7 @@ object main extends App {
     }
   }
 
-  val a1: List[Int] = List(1,2,3,4,5,6)
+    val a1: List[Int] = List(1,2,3,4,5,6)
   println(last(a1))
   println(init(a1))
   println(concat(a1,reverse(a1)))
@@ -72,6 +72,4 @@ object main extends App {
   val fruits = List("pineapple","apple","banana","orange")
   println(msort(nums))
   println(msort(fruits))
-
-
 }
