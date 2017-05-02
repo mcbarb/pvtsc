@@ -44,7 +44,7 @@ object main extends App {
 
   def SplitAt[T](xs: List[T], n: Int): (List[T],List[T]) = (xs take n, xs drop n)
 
-  def msort[T](xs: List[T])(ord: Ordering[T]): List[T] = {
+  def msort[T](xs: List[T])(implicit ord: Ordering[T]): List[T] = {
     val n = xs.length/2
     if (n==0) xs
     else {
@@ -57,11 +57,9 @@ object main extends App {
             else y :: merge(xs, ys1)
         }
       val (fst, snd) = SplitAt(xs,n)
-      merge(msort(fst)(ord),msort(snd)(ord))
+      merge(msort(fst),msort(snd))
     }
   }
-
-
 
   val a1: List[Int] = List(1,2,3,4,5,6)
   println(last(a1))
@@ -70,6 +68,10 @@ object main extends App {
   println(removeAt(1, List('a', 'b', 'c', 'd')))
   println(flatten(List(List(1, 1), 2, List(3, List(5, 8)))))
   println(SplitAt(List(),10))
-  println(msort(List(1,4,2,4,7,2,9,0,-1,2))(Ordering.Int))
-  println(msort(List("pineapple","apple","banana","orange"))(Ordering.String))
+  val nums = List(1,4,2,4,7,2,9,0,-1,2)
+  val fruits = List("pineapple","apple","banana","orange")
+  println(msort(nums))
+  println(msort(fruits))
+
+
 }
