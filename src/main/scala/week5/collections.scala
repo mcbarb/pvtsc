@@ -41,10 +41,35 @@ object main extends App {
     case z :: zs => z :: flatten(zs)
   }
 
+  def SplitAt[T](xs: List[T], n: Int): (List[T],List[T]) = (xs take n, xs drop n)
+
+  def msort(xs: List[Int]): List[Int] = {
+    val n = xs.length/2
+    if (n==0) xs
+    else {
+      def merge(xs: List[Int], ys: List[Int]): List[Int] =
+        (xs, ys) match {
+          case (Nil, ys1) => ys1
+          case (xs1, Nil) => xs1
+          case (x :: xs1, y :: ys1) => {
+            if (x < y) x :: merge(xs1, ys)
+            else y :: merge(xs, ys1)
+          }
+
+        }
+      val (fst, snd) = SplitAt(xs,n)
+      merge(msort(fst),msort(snd))
+    }
+  }
+
+
+
   val a1: List[Int] = List(1,2,3,4,5,6)
   println(last(a1))
   println(init(a1))
   println(concat(a1,reverse(a1)))
   println(removeAt(1, List('a', 'b', 'c', 'd')))
   println(flatten(List(List(1, 1), 2, List(3, List(5, 8)))))
+  println(SplitAt(List(),10))
+  println(msort(List(1,4,2,4,7,2,9,0,-1,2)))
 }
