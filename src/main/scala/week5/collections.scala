@@ -3,6 +3,7 @@
   */
 
 object main extends App {
+
   def last[T](list: List[T]) : T = list match {
     case List() => throw new Error("last of empty list")
     case List(x) => x
@@ -43,7 +44,7 @@ object main extends App {
 
   def SplitAt[T](xs: List[T], n: Int): (List[T],List[T]) = (xs take n, xs drop n)
 
-  def msort[T](xs: List[T])(lt: (T, T) => Boolean): List[T] = {
+  def msort[T](xs: List[T])(ord: Ordering[T]): List[T] = {
     val n = xs.length/2
     if (n==0) xs
     else {
@@ -52,11 +53,11 @@ object main extends App {
           case (Nil, ys1) => ys1
           case (xs1, Nil) => xs1
           case (x :: xs1, y :: ys1) =>
-            if (lt(x , y)) x :: merge(xs1, ys)
+            if (ord.lt(x , y)) x :: merge(xs1, ys)
             else y :: merge(xs, ys1)
         }
       val (fst, snd) = SplitAt(xs,n)
-      merge(msort(fst)(lt),msort(snd)(lt))
+      merge(msort(fst)(ord),msort(snd)(ord))
     }
   }
 
@@ -69,6 +70,6 @@ object main extends App {
   println(removeAt(1, List('a', 'b', 'c', 'd')))
   println(flatten(List(List(1, 1), 2, List(3, List(5, 8)))))
   println(SplitAt(List(),10))
-  println(msort(List(1,4,2,4,7,2,9,0,-1,2))((x: Int, y: Int) => x < y))
-  println(msort(List("pineapple","apple","banana","orange"))((x: String, y: String) => x.compareTo(y) < 0))
+  println(msort(List(1,4,2,4,7,2,9,0,-1,2))(Ordering.Int))
+  println(msort(List("pineapple","apple","banana","orange"))(Ordering.String))
 }
