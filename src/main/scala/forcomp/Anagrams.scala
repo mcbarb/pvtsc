@@ -34,10 +34,13 @@ object Anagrams {
    *
    *  Note: you must use `groupBy` to implement this method!
    */
-  def wordOccurrences(w: Word): Occurrences = ???
+  def wordOccurrences(w: Word): Occurrences =
+    (w.toLowerCase.toList groupBy identity mapValues(_.size) toList).sorted
 
   /** Converts a sentence into its character occurrence list. */
-  def sentenceOccurrences(s: Sentence): Occurrences = ???
+  def sentenceOccurrences(s: Sentence): Occurrences =
+    wordOccurrences(""::s reduce(_ ++ _))
+
 
   /** The `dictionaryByOccurrences` is a `Map` from different occurrences to a sequence of all
    *  the words that have that occurrence count.
@@ -54,10 +57,16 @@ object Anagrams {
    *    List(('a', 1), ('e', 1), ('t', 1)) -> Seq("ate", "eat", "tea")
    *
    */
-  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = ???
+  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] =
+    dictionary groupBy wordOccurrences withDefaultValue List() // why isnt withDefaultValue working?
 
   /** Returns all the anagrams of a given word. */
-  def wordAnagrams(word: Word): List[Word] = ???
+  def wordAnagrams(word: Word): List[Word] =
+    dictionaryByOccurrences apply wordOccurrences(word)
+//    dictionaryByOccurrences get wordOccurrences(word) match {
+//      case Some(res) => res
+//      case None => List()
+//    }
 
   /** Returns the list of all subsets of the occurrence list.
    *  This includes the occurrence itself, i.e. `List(('k', 1), ('o', 1))`
@@ -81,7 +90,18 @@ object Anagrams {
    *  Note that the order of the occurrence list subsets does not matter -- the subsets
    *  in the example above could have been displayed in some other order.
    */
-  def combinations(occurrences: Occurrences): List[Occurrences] = ???
+  def combinations(occurrences: Occurrences): List[Occurrences] = occurrences match {
+    case List() => List(Nil)
+    case (ltr,count)::rest => for {
+      n <- (0 to count).toList
+      sl <- combinations(rest)
+    } yield if (n==0) sl else (ltr,n) :: sl
+  }
+//  Did not work because it ignores repetitions; abba broke
+//  {
+//    val letters = for (pair <- occurrences; _ <- 1 to pair._2) yield pair._1
+//    letters.toSet[Char].subsets.map(x => wordOccurrences(x.toList.mkString)).toList
+//  }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
    *
@@ -93,7 +113,13 @@ object Anagrams {
    *  Note: the resulting value is an occurrence - meaning it is sorted
    *  and has no zero-entries.
    */
-  def subtract(x: Occurrences, y: Occurrences): Occurrences = ???
+  def subtract(x: Occurrences, y: Occurrences): Occurrences = {
+    def adjust(zs : Map[Char,Int], yi: (Char,Int)) : Map[Char,Int] =
+      if (yi._2 < zs.apply(yi._1)) zs + (yi._1 -> (zs.apply(yi._1) - yi._2))
+      else zs - yi._1
+    y.foldLeft(x.toMap.withDefaultValue(0))(adjust).toList.sorted
+  }
+
 
   /** Returns a list of all anagram sentences of the given sentence.
    *
@@ -135,5 +161,41 @@ object Anagrams {
    *
    *  Note: There is only one anagram of an empty sentence.
    */
-  def sentenceAnagrams(sentence: Sentence): List[Sentence] = ???
+
+
+  def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
+    val occurrences = sentenceOccurrences(sentence)
+
+    def occurrencesSize(occurrences: Occurrences): Int = occurrences.unzip._2.sum
+
+    def relevantOccurrencesBySize(occurrences: Occurrences, size: Int) : List[Occurrences] =
+      combinations(occurrences) filter (x => x.unzip._2.sum == size && dictionaryByOccurrences.contains(x))
+
+    def sentenceAnagrams0(occurrences: Occurrences) : List[Sentence] = occurrences match {
+      case List() => List(Nil)
+      case _ => for {
+        i <- (1 to occurrencesSize(occurrences)).toList
+        ro <- relevantOccurrencesBySize(occurrences, i)
+        w <- dictionaryByOccurrences(ro)
+        s <- sentenceAnagrams0(subtract(occurrences,ro))
+      } yield w :: s
+    }
+
+    sentenceAnagrams0(occurrences)
+  }
+}
+
+object main extends App {
+  import forcomp.Anagrams._
+
+  println(wordAnagrams("married"))
+  println(combinations(wordOccurrences("eat")))
+
+  println(combinations(List()))
+  println(combinations(wordOccurrences("abba")))
+  println(dictionaryByOccurrences apply wordOccurrences("Marcelo"))
+
+  println(subtract(wordOccurrences("Marcelooooo"),wordOccurrences("ao")))
+
+  println(sentenceAnagrams("I love you".split(" ").toList))
 }

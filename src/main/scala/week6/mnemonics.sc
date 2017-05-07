@@ -11,6 +11,7 @@ def wordCode(word: String): String =
   word.toUpperCase map charCode
 
 wordCode("Java")
+wordCode("Marcelo")
 
 val wordsForNum: Map[String,Seq[String]] =
   words groupBy wordCode withDefaultValue Seq()
